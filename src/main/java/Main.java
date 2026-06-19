@@ -3,7 +3,7 @@ import java.io.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Scanner scanner = new Scanner(System.in);
+Scanner scanner = new Scanner(System.in);
         List<String> builtins = List.of("echo", "exit", "type");
         String pathEnv = System.getenv("PATH");
         String[] paths = pathEnv != null ? pathEnv.split(File.pathSeparator) : new String[0];
