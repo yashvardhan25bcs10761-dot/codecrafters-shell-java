@@ -29,17 +29,23 @@ public class Main {
                 System.out.println(currentDir);
             }
 
-            else if (input.startsWith("cd ")) {
-                String dir = input.substring(3);
+else if (input.startsWith("cd ")) {
+    String dir = input.substring(3);
 
-                File newDir = new File(dir);
+    File newDir;
 
-                if (newDir.isDirectory()) {
-                    currentDir = newDir.getAbsolutePath();
-                } else {
-                    System.out.println("cd: " + dir + ": No such file or directory");
-                }
-            }
+    if (new File(dir).isAbsolute()) {
+        newDir = new File(dir);
+    } else {
+        newDir = new File(currentDir, dir);
+    }
+
+    if (newDir.exists() && newDir.isDirectory()) {
+        currentDir = newDir.getCanonicalPath();
+    } else {
+        System.out.println("cd: " + dir + ": No such file or directory");
+    }
+}
 
             else if (input.startsWith("type ")) {
                 String cmd = input.substring(5);
