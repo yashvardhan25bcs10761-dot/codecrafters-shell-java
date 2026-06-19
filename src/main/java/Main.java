@@ -2,6 +2,34 @@ import java.util.*;
 import java.io.*;
 
 public class Main {
+
+    static List<String> parse(String s) {
+        List<String> res = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        boolean q = false;
+
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+
+            if (c == '\'') {
+                q = !q;
+            } else if (Character.isWhitespace(c) && !q) {
+                if (cur.length() > 0) {
+                    res.add(cur.toString());
+                    cur.setLength(0);
+                }
+            } else {
+                cur.append(c);
+            }
+        }
+
+        if (cur.length() > 0) {
+            res.add(cur.toString());
+        }
+
+        return res;
+    }
+
     public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
 
@@ -14,22 +42,39 @@ public class Main {
 
         while (true) {
             System.out.print("$ ");
+
             String in = sc.nextLine();
 
             if (in.equals("exit")) {
                 break;
             }
 
-            else if (in.startsWith("echo ")) {
-                System.out.println(in.substring(5));
+            List<String> parts = parse(in);
+
+            if (parts.isEmpty()) {
+                continue;
             }
 
-            else if (in.equals("pwd")) {
+            String cmd = parts.get(0);
+
+            if (cmd.equals("echo")) {
+                if (parts.size() > 1) {
+                    System.out.println(String.join(" ", parts.subList(1, parts.size())));
+                } else {
+                    System.out.println();
+                }
+            }
+
+            else if (cmd.equals("pwd")) {
                 System.out.println(cur);
             }
 
-            else if (in.startsWith("cd ")) {
-                String dir = in.substring(3);
+            else if (cmd.equals("cd")) {
+                if (parts.size() < 2) {
+                    continue;
+                }
+
+                String dir = parts.get(1);
                 File f;
 
                 if (dir.equals("~")) {
@@ -47,16 +92,20 @@ public class Main {
                 }
             }
 
-            else if (in.startsWith("type ")) {
-                String cmd = in.substring(5);
+            else if (cmd.equals("type")) {
+                if (parts.size() < 2) {
+                    continue;
+                }
 
-                if (b.contains(cmd)) {
-                    System.out.println(cmd + " is a shell builtin");
+                String t = parts.get(1);
+
+                if (b.contains(t)) {
+                    System.out.println(t + " is a shell builtin");
                 } else {
                     String fp = null;
 
                     for (String p : paths) {
-                        File f = new File(p, cmd);
+                        File f = new File(p, t);
 
                         if (f.exists() && f.canExecute()) {
                             fp = f.getAbsolutePath();
@@ -65,17 +114,18 @@ public class Main {
                     }
 
                     if (fp != null) {
-                        System.out.println(cmd + " is " + fp);
+                        System.out.println(t + " is " + fp);
                     } else {
-                        System.out.println(cmd + ": not found");
+                        System.out.println(t + ": not found");
                     }
                 }
             }
 
-            else {
-                String[] parts = in.split(" ");
-                String cmd = parts[0];
+            else if (cmd.equals("exit")) {
+                break;
+            }
 
+            else {
                 String exe = null;
 
                 for (String p : paths) {
@@ -100,5 +150,7 @@ public class Main {
                 }
             }
         }
+
+        sc.close();
     }
 }
