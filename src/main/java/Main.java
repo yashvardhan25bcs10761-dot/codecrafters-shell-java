@@ -1,19 +1,22 @@
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
-Scanner scanner = new Scanner(System.in);
-        
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Set<String> builtins = Set.of("echo", "exit", "type");
+
         while (true) {
             System.out.print("$ ");
-            String input = scanner.nextLine();
-            
-            if (input.equals("exit")) {
-                break;
-            } else if (input.startsWith("echo ")) {
-                System.out.println(input.substring(5));
-            } else {
-                System.out.println(input + ": command not found");
+            String input = sc.nextLine();
+
+            if (input.startsWith("type ")) {
+                String cmd = input.substring(5);
+
+                if (builtins.contains(cmd)) {
+                    System.out.println(cmd + " is a shell builtin");
+                } else {
+                    System.out.println(cmd + ": not found");
+                }
             }
         }
     }
