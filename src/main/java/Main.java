@@ -5,7 +5,7 @@ import java.io.File;
 public class Main {
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
-        List<String> builtins = List.of("echo", "exit", "type");
+        List<String> builtins = List.of("echo", "exit", "type", "pwd");
 
         String pathEnv = System.getenv("PATH");
         String[] paths = pathEnv != null ? pathEnv.split(File.pathSeparator) : new String[0];
@@ -20,6 +20,10 @@ public class Main {
 
             if (input.startsWith("echo ")) {
                 System.out.println(input.substring(5));
+
+            } else if (input.equals("pwd")) {
+                System.out.println(System.getProperty("user.dir"));
+
             } else if (input.startsWith("type ")) {
                 String cmd = input.substring(5);
 
@@ -42,6 +46,7 @@ public class Main {
                         System.out.println(cmd + ": not found");
                     }
                 }
+
             } else {
                 String[] parts = input.split(" ");
                 String command = parts[0];
@@ -67,5 +72,7 @@ public class Main {
                 }
             }
         }
+
+        scanner.close();
     }
 }
