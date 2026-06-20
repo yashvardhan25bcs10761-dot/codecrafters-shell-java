@@ -14,6 +14,45 @@ public class Main {
             this.cmd = cmd;
         }
     }
+
+    static void reapJobs(List<Job> jobs) {
+        int maxId = -1;
+        int secondMaxId = -1;
+
+        for (Job j : jobs) {
+            if (j.id > maxId) {
+                secondMaxId = maxId;
+                maxId = j.id;
+            } else if (j.id > secondMaxId) {
+                secondMaxId = j.id;
+            }
+        }
+
+        Iterator<Job> it = jobs.iterator();
+
+        while (it.hasNext()) {
+            Job j = it.next();
+
+            if (!j.p.isAlive()) {
+                char mark = ' ';
+
+                if (j.id == maxId) {
+                    mark = '+';
+                } else if (j.id == secondMaxId) {
+                    mark = '-';
+                }
+
+                System.out.printf("[%d]%c  %-24s %s%n",
+                        j.id,
+                        mark,
+                        "Done",
+                        j.cmd);
+
+                it.remove();
+            }
+        }
+    }
+
     static List<String> parse(String s) {
         List<String> res = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
@@ -86,6 +125,8 @@ public class Main {
         String cur = System.getProperty("user.dir");
 
         while (true) {
+            reapJobs(jobs);
+            
             System.out.print("$ ");
 
             String in = sc.nextLine();
