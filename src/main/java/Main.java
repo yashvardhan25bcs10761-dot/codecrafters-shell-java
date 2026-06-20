@@ -167,11 +167,14 @@ public class Main {
         String cur = System.getProperty("user.dir");
 
         while (true) {
+
             reapJobs(jobs);
-            
+
             System.out.print("$ ");
 
             String in = sc.nextLine();
+
+            reapJobs(jobs);
 
             if (in.contains("|")) {
 
