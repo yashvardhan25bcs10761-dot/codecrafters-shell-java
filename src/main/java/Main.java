@@ -3,6 +3,17 @@ import java.io.*;
 
 public class Main {
 
+    static class Job {
+        int id;
+        Process p;
+        String cmd;
+
+        Job(int id, Process p, String cmd) {
+            this.id = id;
+            this.p = p;
+            this.cmd = cmd;
+        }
+    }
     static List<String> parse(String s) {
         List<String> res = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
@@ -73,18 +84,6 @@ public class Main {
         String[] paths = pEnv != null ? pEnv.split(File.pathSeparator) : new String[0];
 
         String cur = System.getProperty("user.dir");
-        
-        static class Job {
-            int id;
-            Process p;
-            String cmd;
-
-            Job(int id, Process p, String cmd) {
-                this.id = id;
-                this.p = p;
-                this.cmd = cmd;
-            }
-        }
 
         while (true) {
             System.out.print("$ ");
@@ -349,8 +348,9 @@ public class Main {
                 } else {
                     System.out.println(cmd + ": command not found");
                 }
-        }
             }
-            sc.close();
         }
+
+        sc.close();
     }
+}
