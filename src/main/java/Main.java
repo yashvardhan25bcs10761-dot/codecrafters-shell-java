@@ -140,6 +140,61 @@ public class Main {
 
             String in = sc.nextLine();
 
+            if (in.contains("|")) {
+                String[] cmds = in.split("\\|", 2);
+
+                List<String> left = parse(cmds[0].trim());
+                List<String> right = parse(cmds[1].trim());
+
+                Process p1 = new ProcessBuilder(left)
+                        .directory(new File(cur))
+                        .start();
+
+                Process p2 = new ProcessBuilder(right)
+                        .directory(new File(cur))
+                        .start();
+
+                Thread pipeThread = new Thread(() -> {
+                    try (
+                            InputStream is = p1.getInputStream();
+                            OutputStream os = p2.getOutputStream()
+                    ) {
+                        is.transferTo(os);
+                        os.flush();
+                        os.close();
+                    } catch (IOException ignored) {
+                    }
+                });
+
+                pipeThread.start();
+
+                Thread outThread = new Thread(() -> {
+                    try {
+                        p2.getInputStream().transferTo(System.out);
+                    } catch (IOException ignored) {
+                    }
+                });
+
+                Thread errThread = new Thread(() -> {
+                    try {
+                        p2.getErrorStream().transferTo(System.err);
+                    } catch (IOException ignored) {
+                    }
+                });
+
+                outThread.start();
+                errThread.start();
+
+                p1.waitFor();
+                pipeThread.join();
+
+                p2.waitFor();
+                outThread.join();
+                errThread.join();
+
+                continue;
+            }
+
             List<String> parts = parse(in);
 
             if (parts.isEmpty()) {
