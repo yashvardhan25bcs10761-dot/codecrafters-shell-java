@@ -199,14 +199,7 @@ public class Main {
                 }
 
                 if (exe != null) {
-                    List<String> run = new ArrayList<>();
-                    run.add(exe);
-
-                    if (parts.size() > 1) {
-                        run.addAll(parts.subList(1, parts.size()));
-                    }
-
-                    ProcessBuilder pb = new ProcessBuilder(run)
+                    ProcessBuilder pb = new ProcessBuilder(parts)
                             .directory(new File(cur));
 
                     if (outFile != null) {
