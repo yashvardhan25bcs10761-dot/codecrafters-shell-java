@@ -85,6 +85,7 @@ public class Main {
             String outFile = null;
             String errFile = null;
             boolean appendOut = false;
+            boolean appendErr = false;
 
         for (int i = 0; i < parts.size(); i++) {
             String t = parts.get(i);
@@ -105,6 +106,14 @@ public class Main {
 
             if (t.equals("2>")) {
                 errFile = parts.get(i + 1);
+                appendErr = false;
+                parts = new ArrayList<>(parts.subList(0, i));
+                break;
+            }
+
+            if (t.equals("2>>")) {
+                errFile = parts.get(i + 1);
+                appendErr = true;
                 parts = new ArrayList<>(parts.subList(0, i));
                 break;
             }
@@ -150,8 +159,7 @@ public class Main {
                 }
 
                 if (errFile != null) {
-                    new PrintWriter(errFile).close();
-                }
+                    new PrintWriter(new FileWriter(errFile, appendErr)).close();                }
             }
 
             else if (cmd.equals("cd")) {
@@ -176,7 +184,7 @@ public class Main {
                     String msg = "cd: " + dir + ": No such file or directory";
 
                     if (errFile != null) {
-                        try (PrintWriter pw = new PrintWriter(errFile)) {
+                        try (PrintWriter pw = new PrintWriter(new FileWriter(errFile, appendErr))) {
                             pw.println(msg);
                         }
                     } else {
@@ -249,7 +257,11 @@ public class Main {
                         }
 
                     if (errFile != null) {
-                        pb.redirectError(new File(errFile));
+                        if (appendErr) {
+                            pb.redirectError(ProcessBuilder.Redirect.appendTo(new File(errFile)));
+                        } else {
+                            pb.redirectError(new File(errFile));
+                        }
                     }
 
                     Process pr = pb.start();
