@@ -4,62 +4,63 @@ import java.io.*;
 public class Main {
 
     static List<String> parse(String s) {
-    List<String> res = new ArrayList<>();
-    StringBuilder cur = new StringBuilder();
+        List<String> res = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
 
-    boolean sq = false;
-    boolean dq = false;
+        boolean sq = false;
+        boolean dq = false;
 
-    for (int i = 0; i < s.length(); i++) {
-        char c = s.charAt(i);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
 
-        if (dq && c == '\\') {
-            if (i + 1 < s.length()) {
-                char n = s.charAt(i + 1);
+            if (dq && c == '\\') {
+                if (i + 1 < s.length()) {
+                    char n = s.charAt(i + 1);
 
-                if (n == '"' || n == '\\') {
-                    cur.append(n);
-                    i++;
+                    if (n == '"' || n == '\\') {
+                        cur.append(n);
+                        i++;
+                    } else {
+                        cur.append('\\');
+                    }
                 } else {
                     cur.append('\\');
                 }
-            } else {
-                cur.append('\\');
+            }
+
+            else if (!sq && !dq && c == '\\') {
+                if (i + 1 < s.length()) {
+                    cur.append(s.charAt(++i));
+                }
+            }
+
+            else if (c == '\'' && !dq) {
+                sq = !sq;
+            }
+
+            else if (c == '"' && !sq) {
+                dq = !dq;
+            }
+
+            else if (Character.isWhitespace(c) && !sq && !dq) {
+                if (cur.length() > 0) {
+                    res.add(cur.toString());
+                    cur.setLength(0);
+                }
+            }
+
+            else {
+                cur.append(c);
             }
         }
 
-        else if (!sq && !dq && c == '\\') {
-            if (i + 1 < s.length()) {
-                cur.append(s.charAt(++i));
-            }
+        if (cur.length() > 0) {
+            res.add(cur.toString());
         }
 
-        else if (c == '\'' && !dq) {
-            sq = !sq;
-        }
-
-        else if (c == '"' && !sq) {
-            dq = !dq;
-        }
-
-        else if (Character.isWhitespace(c) && !sq && !dq) {
-            if (cur.length() > 0) {
-                res.add(cur.toString());
-                cur.setLength(0);
-            }
-        }
-
-        else {
-            cur.append(c);
-        }
+        return res;
     }
 
-    if (cur.length() > 0) {
-        res.add(cur.toString());
-    }
-
-    return res;
-}
     public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
 
@@ -75,11 +76,21 @@ public class Main {
 
             String in = sc.nextLine();
 
-            if (in.equals("exit")) {
-                break;
+            List<String> parts = parse(in);
+
+            if (parts.isEmpty()) {
+                continue;
             }
 
-            List<String> parts = parse(in);
+            String outFile = null;
+
+            for (int i = 0; i < parts.size(); i++) {
+                if (parts.get(i).equals(">") || parts.get(i).equals("1>")) {
+                    outFile = parts.get(i + 1);
+                    parts = new ArrayList<>(parts.subList(0, i));
+                    break;
+                }
+            }
 
             if (parts.isEmpty()) {
                 continue;
@@ -87,16 +98,34 @@ public class Main {
 
             String cmd = parts.get(0);
 
-            if (cmd.equals("echo")) {
+            if (cmd.equals("exit")) {
+                break;
+            }
+
+            else if (cmd.equals("echo")) {
+                String out = "";
+
                 if (parts.size() > 1) {
-                    System.out.println(String.join(" ", parts.subList(1, parts.size())));
+                    out = String.join(" ", parts.subList(1, parts.size()));
+                }
+
+                if (outFile != null) {
+                    try (PrintWriter pw = new PrintWriter(outFile)) {
+                        pw.println(out);
+                    }
                 } else {
-                    System.out.println();
+                    System.out.println(out);
                 }
             }
 
             else if (cmd.equals("pwd")) {
-                System.out.println(cur);
+                if (outFile != null) {
+                    try (PrintWriter pw = new PrintWriter(outFile)) {
+                        pw.println(cur);
+                    }
+                } else {
+                    System.out.println(cur);
+                }
             }
 
             else if (cmd.equals("cd")) {
@@ -129,8 +158,10 @@ public class Main {
 
                 String t = parts.get(1);
 
+                String ans;
+
                 if (b.contains(t)) {
-                    System.out.println(t + " is a shell builtin");
+                    ans = t + " is a shell builtin";
                 } else {
                     String fp = null;
 
@@ -143,16 +174,16 @@ public class Main {
                         }
                     }
 
-                    if (fp != null) {
-                        System.out.println(t + " is " + fp);
-                    } else {
-                        System.out.println(t + ": not found");
-                    }
+                    ans = (fp != null) ? t + " is " + fp : t + ": not found";
                 }
-            }
 
-            else if (cmd.equals("exit")) {
-                break;
+                if (outFile != null) {
+                    try (PrintWriter pw = new PrintWriter(outFile)) {
+                        pw.println(ans);
+                    }
+                } else {
+                    System.out.println(ans);
+                }
             }
 
             else {
@@ -168,12 +199,28 @@ public class Main {
                 }
 
                 if (exe != null) {
-                    Process pr = new ProcessBuilder(parts)
-                            .directory(new File(cur))
-                            .redirectErrorStream(true)
-                            .start();
+                    List<String> run = new ArrayList<>();
+                    run.add(exe);
 
-                    pr.getInputStream().transferTo(System.out);
+                    if (parts.size() > 1) {
+                        run.addAll(parts.subList(1, parts.size()));
+                    }
+
+                    ProcessBuilder pb = new ProcessBuilder(run)
+                            .directory(new File(cur));
+
+                    if (outFile != null) {
+                        pb.redirectOutput(new File(outFile));
+                    }
+
+                    Process pr = pb.start();
+
+                    pr.getErrorStream().transferTo(System.err);
+
+                    if (outFile == null) {
+                        pr.getInputStream().transferTo(System.out);
+                    }
+
                     pr.waitFor();
                 } else {
                     System.out.println(cmd + ": command not found");
