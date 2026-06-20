@@ -174,8 +174,6 @@ public class Main {
 
             String in = sc.nextLine();
 
-            reapJobs(jobs);
-
             if (in.contains("|")) {
 
                 String[] cmds = in.split("\\|");
@@ -329,6 +327,8 @@ public class Main {
                     System.out.println(out);
                 }
 
+                reapJobs(jobs);
+
                 if (errFile != null) {
                     new PrintWriter(new FileWriter(errFile, appendErr)).close();
                 }
@@ -342,6 +342,8 @@ public class Main {
                 } else {
                     System.out.println(cur);
                 }
+
+                reapJobs(jobs);
 
                 if (errFile != null) {
                     new PrintWriter(new FileWriter(errFile, appendErr)).close();                }
@@ -375,6 +377,7 @@ public class Main {
                     } else {
                         System.out.println(msg);
                     }
+                    reapJobs(jobs);
                 }
             }
 
@@ -457,6 +460,8 @@ public class Main {
                     System.out.println(ans);
                 }
 
+                reapJobs(jobs);
+
                 if (errFile != null) {
                     new PrintWriter(new FileWriter(errFile, appendErr)).close();
                 }
@@ -528,6 +533,7 @@ public class Main {
                         }
 
                         pr.waitFor();
+                        reapJobs(jobs);
                     }
                 } else {
                     System.out.println(cmd + ": command not found");
