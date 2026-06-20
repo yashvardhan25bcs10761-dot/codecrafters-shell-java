@@ -83,10 +83,19 @@ public class Main {
             }
 
             String outFile = null;
+            String errFile = null;
 
             for (int i = 0; i < parts.size(); i++) {
-                if (parts.get(i).equals(">") || parts.get(i).equals("1>")) {
+                String t = parts.get(i);
+
+                if (t.equals(">") || t.equals("1>")) {
                     outFile = parts.get(i + 1);
+                    parts = new ArrayList<>(parts.subList(0, i));
+                    break;
+                }
+
+                if (t.equals("2>")) {
+                    errFile = parts.get(i + 1);
                     parts = new ArrayList<>(parts.subList(0, i));
                     break;
                 }
@@ -147,7 +156,15 @@ public class Main {
                 if (f.exists() && f.isDirectory()) {
                     cur = f.getCanonicalPath();
                 } else {
-                    System.out.println("cd: " + dir + ": No such file or directory");
+                    String msg = "cd: " + dir + ": No such file or directory";
+
+                    if (errFile != null) {
+                        try (PrintWriter pw = new PrintWriter(errFile)) {
+                            pw.println(msg);
+                        }
+                    } else {
+                        System.out.println(msg);
+                    }
                 }
             }
 
@@ -206,12 +223,18 @@ public class Main {
                         pb.redirectOutput(new File(outFile));
                     }
 
-                    Process pr = pb.start();
+                    if (errFile != null) {
+                        pb.redirectError(new File(errFile));
+                    }
 
-                    pr.getErrorStream().transferTo(System.err);
+                    Process pr = pb.start();
 
                     if (outFile == null) {
                         pr.getInputStream().transferTo(System.out);
+                    }
+
+                    if (errFile == null) {
+                        pr.getErrorStream().transferTo(System.err);
                     }
 
                     pr.waitFor();
