@@ -221,6 +221,8 @@ public class Main {
                     continue;
                 }
 
+                List<String> parts = parse(in);
+
                 List<ProcessBuilder> builders = List.of(
                         new ProcessBuilder(left).directory(new File(cur)),
                         new ProcessBuilder(right).directory(new File(cur))
