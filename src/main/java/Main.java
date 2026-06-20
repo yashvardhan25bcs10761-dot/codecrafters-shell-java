@@ -4,39 +4,62 @@ import java.io.*;
 public class Main {
 
     static List<String> parse(String s) {
-        List<String> res = new ArrayList<>();
-        StringBuilder cur = new StringBuilder();
+    List<String> res = new ArrayList<>();
+    StringBuilder cur = new StringBuilder();
 
-        boolean sq = false;
-        boolean dq = false;
+    boolean sq = false;
+    boolean dq = false;
 
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.charAt(i);
 
-            if (!sq && !dq && c == '\\') {
-                if (i + 1 < s.length()) {
-                    cur.append(s.charAt(++i));
-                }
-            } else if (c == '\'' && !dq) {
-                sq = !sq;
-            } else if (c == '"' && !sq) {
-                dq = !dq;
-            } else if (Character.isWhitespace(c) && !sq && !dq) {
-                if (cur.length() > 0) {
-                    res.add(cur.toString());
-                    cur.setLength(0);
+        if (dq && c == '\\') {
+            if (i + 1 < s.length()) {
+                char n = s.charAt(i + 1);
+
+                if (n == '"' || n == '\\') {
+                    cur.append(n);
+                    i++;
+                } else {
+                    cur.append('\\');
                 }
             } else {
-                cur.append(c);
+                cur.append('\\');
             }
         }
 
-        if (cur.length() > 0) {
-            res.add(cur.toString());
+        else if (!sq && !dq && c == '\\') {
+            if (i + 1 < s.length()) {
+                cur.append(s.charAt(++i));
+            }
         }
 
-        return res;
+        else if (c == '\'' && !dq) {
+            sq = !sq;
+        }
+
+        else if (c == '"' && !sq) {
+            dq = !dq;
+        }
+
+        else if (Character.isWhitespace(c) && !sq && !dq) {
+            if (cur.length() > 0) {
+                res.add(cur.toString());
+                cur.setLength(0);
+            }
+        }
+
+        else {
+            cur.append(c);
+        }
     }
+
+    if (cur.length() > 0) {
+        res.add(cur.toString());
+    }
+
+    return res;
+}
     public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
 
