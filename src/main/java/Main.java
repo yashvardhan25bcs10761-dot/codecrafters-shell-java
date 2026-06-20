@@ -125,6 +125,13 @@ public class Main {
 
             String cmd = parts.get(0);
 
+            boolean bg = false;
+
+            if (parts.get(parts.size() - 1).equals("&")) {
+                bg = true;
+                parts.remove(parts.size() - 1);
+            }
+
             if (cmd.equals("exit")) {
                 break;
             }
@@ -268,8 +275,12 @@ public class Main {
                         }
                     }
 
-                    Process pr = pb.start();
+                Process pr = pb.start();
 
+                if (bg) {
+                    System.out.println("[1] " + pr.pid());
+                }
+                else {
                     if (outFile == null) {
                         pr.getInputStream().transferTo(System.out);
                     }
@@ -279,6 +290,7 @@ public class Main {
                     }
 
                     pr.waitFor();
+                
                 } else {
                     System.out.println(cmd + ": command not found");
                 }
