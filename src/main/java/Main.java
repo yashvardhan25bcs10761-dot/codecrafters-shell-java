@@ -70,6 +70,9 @@ public class Main {
         String[] paths = pEnv != null ? pEnv.split(File.pathSeparator) : new String[0];
 
         String cur = System.getProperty("user.dir");
+        
+        Process bgJob = null;
+        String bgCmd = null;
 
         while (true) {
             System.out.print("$ ");
@@ -201,7 +204,9 @@ public class Main {
             }
 
             else if (cmd.equals("jobs")) {
-
+                if (bgJob != null && bgJob.isAlive()) {
+                    System.out.printf("[1]+  %-24s %s &%n", "Running", bgCmd);
+                }
             }
 
             else if (cmd.equals("type")) {
@@ -284,8 +289,12 @@ public class Main {
                             pb.redirectError(ProcessBuilder.Redirect.INHERIT);
                         }
 
-                        Process pr = pb.start();
-                        System.out.println("[1] " + pr.pid());
+                    Process pr = pb.start();
+
+                    bgJob = pr;
+                    bgCmd = String.join(" ", parts);
+
+                    System.out.println("[1] " + pr.pid());
                     } else {
                         Process pr = pb.start();
 
@@ -304,6 +313,6 @@ public class Main {
                 }
         }
             }
-                sc.close();
-            }
+            sc.close();
         }
+    }
