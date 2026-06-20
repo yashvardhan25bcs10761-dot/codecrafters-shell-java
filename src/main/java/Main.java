@@ -182,6 +182,11 @@ public class Main {
                 String leftBuiltin = runBuiltin(left, b, paths);
                 String rightBuiltin = runBuiltin(right, b, paths);
 
+                if (leftBuiltin != null && rightBuiltin != null) {
+                    System.out.print(rightBuiltin);
+                    continue;
+                }
+
                 if (leftBuiltin != null) {
 
                     Process p = new ProcessBuilder(right)
@@ -221,8 +226,6 @@ public class Main {
                     continue;
                 }
 
-                List<String> parts = parse(in);
-
                 List<ProcessBuilder> builders = List.of(
                         new ProcessBuilder(left).directory(new File(cur)),
                         new ProcessBuilder(right).directory(new File(cur))
@@ -237,6 +240,12 @@ public class Main {
 
                 last.waitFor();
 
+                continue;
+            }
+
+            List<String> parts = parse(in);
+
+            if (parts.isEmpty()) {
                 continue;
             }
 
