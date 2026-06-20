@@ -53,6 +53,16 @@ public class Main {
         }
     }
 
+    static int getNextJobId(List<Job> jobs) {
+        int maxId = 0;
+
+        for (Job j : jobs) {
+            maxId = Math.max(maxId, j.id);
+        }
+
+        return maxId + 1;
+    }
+
     static List<String> parse(String s) {
         List<String> res = new ArrayList<>();
         StringBuilder cur = new StringBuilder();
@@ -117,7 +127,6 @@ public class Main {
         List<String> b = List.of("echo", "exit", "type", "pwd", "cd", "jobs");
         
         List<Job> jobs = new ArrayList<>();
-        int nextJobId = 1;
         
         String pEnv = System.getenv("PATH");
         String[] paths = pEnv != null ? pEnv.split(File.pathSeparator) : new String[0];
@@ -382,17 +391,17 @@ public class Main {
 
                     Process pr = pb.start();
 
+                    int jobId = getNextJobId(jobs);
+
                     jobs.add(
                         new Job(
-                            nextJobId,
+                            jobId,
                             pr,
                             String.join(" ", parts)
                         )
                     );
 
-                    System.out.println("[" + nextJobId + "] " + pr.pid());
-
-                    nextJobId++;
+                    System.out.println("[" + jobId + "] " + pr.pid());
                     } else {
                         Process pr = pb.start();
 
