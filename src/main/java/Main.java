@@ -65,14 +65,26 @@ public class Main {
         Scanner sc = new Scanner(System.in);
 
         List<String> b = List.of("echo", "exit", "type", "pwd", "cd", "jobs");
-
+        
+        List<Job> jobs = new ArrayList<>();
+        int nextJobId = 1;
+        
         String pEnv = System.getenv("PATH");
         String[] paths = pEnv != null ? pEnv.split(File.pathSeparator) : new String[0];
 
         String cur = System.getProperty("user.dir");
         
-        Process bgJob = null;
-        String bgCmd = null;
+        static class Job {
+            int id;
+            Process p;
+            String cmd;
+
+            Job(int id, Process p, String cmd) {
+                this.id = id;
+                this.p = p;
+                this.cmd = cmd;
+            }
+        }
 
         while (true) {
             System.out.print("$ ");
@@ -204,8 +216,27 @@ public class Main {
             }
 
             else if (cmd.equals("jobs")) {
-                if (bgJob != null && bgJob.isAlive()) {
-                    System.out.printf("[1]+  %-24s %s &%n", "Running", bgCmd);
+
+                for (int i = 0; i < jobs.size(); i++) {
+                    Job j = jobs.get(i);
+
+                    if (!j.p.isAlive()) {
+                        continue;
+                    }
+
+                    char mark = ' ';
+
+                    if (i == jobs.size() - 1) {
+                        mark = '+';
+                    } else if (i == jobs.size() - 2) {
+                        mark = '-';
+                    }
+
+                    System.out.printf("[%d]%c  %-24s %s &%n",
+                            j.id,
+                            mark,
+                            "Running",
+                            j.cmd);
                 }
             }
 
@@ -291,10 +322,17 @@ public class Main {
 
                     Process pr = pb.start();
 
-                    bgJob = pr;
-                    bgCmd = String.join(" ", parts);
+                    jobs.add(
+                        new Job(
+                            nextJobId,
+                            pr,
+                            String.join(" ", parts)
+                        )
+                    );
 
-                    System.out.println("[1] " + pr.pid());
+                    System.out.println("[" + nextJobId + "] " + pr.pid());
+
+                    nextJobId++;
                     } else {
                         Process pr = pb.start();
 
