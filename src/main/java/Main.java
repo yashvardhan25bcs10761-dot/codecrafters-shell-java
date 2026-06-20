@@ -64,7 +64,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
 
-        List<String> b = List.of("echo", "exit", "type", "pwd", "cd");
+        List<String> b = List.of("echo", "exit", "type", "pwd", "cd", "jobs");
 
         String pEnv = System.getenv("PATH");
         String[] paths = pEnv != null ? pEnv.split(File.pathSeparator) : new String[0];
@@ -191,6 +191,10 @@ public class Main {
                         System.out.println(msg);
                     }
                 }
+            }
+
+            else if (cmd.equals("jobs")) {
+
             }
 
             else if (cmd.equals("type")) {
