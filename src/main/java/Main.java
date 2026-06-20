@@ -177,40 +177,78 @@ public class Main {
 
                 String[] cmds = in.split("\\|");
 
-                List<ProcessBuilder> builders = new ArrayList<>();
+                if (cmds.length == 2) {
 
-                boolean hasBuiltin = false;
+                    List<String> left = parse(cmds[0].trim());
+                    List<String> right = parse(cmds[1].trim());
 
-                for (String cmdPart : cmds) {
-                    List<String> cmdParts = parse(cmdPart.trim());
+                    String leftBuiltin = runBuiltin(left, b, paths);
+                    String rightBuiltin = runBuiltin(right, b, paths);
 
-                    if (runBuiltin(cmdParts, b, paths) != null) {
-                        hasBuiltin = true;
-                        break;
+                    if (leftBuiltin != null && rightBuiltin != null) {
+                        System.out.print(rightBuiltin);
+                        continue;
                     }
 
+                    if (leftBuiltin != null) {
+
+                        Process p = new ProcessBuilder(right)
+                                .directory(new File(cur))
+                                .start();
+
+                        try (OutputStream os = p.getOutputStream()) {
+                            os.write(leftBuiltin.getBytes());
+                        }
+
+                        p.getInputStream().transferTo(System.out);
+                        p.getErrorStream().transferTo(System.err);
+
+                        p.waitFor();
+                        continue;
+                    }
+
+                    if (rightBuiltin != null) {
+
+                        Process p = new ProcessBuilder(left)
+                                .directory(new File(cur))
+                                .start();
+
+                        Thread t = new Thread(() -> {
+                            try {
+                                p.getInputStream().transferTo(OutputStream.nullOutputStream());
+                            } catch (IOException ignored) {}
+                        });
+
+                        t.start();
+
+                        p.waitFor();
+
+                        System.out.print(rightBuiltin);
+                        continue;
+                    }
+                }
+
+                List<ProcessBuilder> builders = new ArrayList<>();
+
+                for (String cmdPart : cmds) {
                     builders.add(
-                            new ProcessBuilder(cmdParts)
-                                    .directory(new File(cur))
+                        new ProcessBuilder(parse(cmdPart.trim()))
+                            .directory(new File(cur))
                     );
                 }
 
-                if (!hasBuiltin) {
+                List<Process> pipeline = ProcessBuilder.startPipeline(builders);
 
-                    List<Process> pipeline = ProcessBuilder.startPipeline(builders);
+                Process last = pipeline.get(pipeline.size() - 1);
 
-                    Process last = pipeline.get(pipeline.size() - 1);
+                last.getInputStream().transferTo(System.out);
+                last.getErrorStream().transferTo(System.err);
 
-                    last.getInputStream().transferTo(System.out);
-                    last.getErrorStream().transferTo(System.err);
-
-                    for (Process p : pipeline) {
-                        p.waitFor();
-                    }
-
-                    continue;
+                for (Process p : pipeline) {
+                    p.waitFor();
                 }
 
+                continue;
             }
 
             List<String> parts = parse(in);
