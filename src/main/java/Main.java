@@ -146,51 +146,19 @@ public class Main {
                 List<String> left = parse(cmds[0].trim());
                 List<String> right = parse(cmds[1].trim());
 
-                Process p1 = new ProcessBuilder(left)
-                        .directory(new File(cur))
-                        .start();
+                List<ProcessBuilder> builders = List.of(
+                        new ProcessBuilder(left).directory(new File(cur)),
+                        new ProcessBuilder(right).directory(new File(cur))
+                );
 
-                Process p2 = new ProcessBuilder(right)
-                        .directory(new File(cur))
-                        .start();
+                List<Process> pipeline = ProcessBuilder.startPipeline(builders);
 
-                Thread pipeThread = new Thread(() -> {
-                    try (
-                            InputStream is = p1.getInputStream();
-                            OutputStream os = p2.getOutputStream()
-                    ) {
-                        is.transferTo(os);
-                        os.flush();
-                        os.close();
-                    } catch (IOException ignored) {
-                    }
-                });
+                Process last = pipeline.get(pipeline.size() - 1);
 
-                pipeThread.start();
+                last.getInputStream().transferTo(System.out);
+                last.getErrorStream().transferTo(System.err);
 
-                Thread outThread = new Thread(() -> {
-                    try {
-                        p2.getInputStream().transferTo(System.out);
-                    } catch (IOException ignored) {
-                    }
-                });
-
-                Thread errThread = new Thread(() -> {
-                    try {
-                        p2.getErrorStream().transferTo(System.err);
-                    } catch (IOException ignored) {
-                    }
-                });
-
-                outThread.start();
-                errThread.start();
-
-                p1.waitFor();
-                pipeThread.join();
-
-                p2.waitFor();
-                outThread.join();
-                errThread.join();
+                last.waitFor();
 
                 continue;
             }
