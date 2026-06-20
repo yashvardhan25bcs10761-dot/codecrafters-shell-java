@@ -84,22 +84,31 @@ public class Main {
 
             String outFile = null;
             String errFile = null;
+            boolean appendOut = false;
 
-            for (int i = 0; i < parts.size(); i++) {
-                String t = parts.get(i);
+        for (int i = 0; i < parts.size(); i++) {
+            String t = parts.get(i);
 
-                if (t.equals(">") || t.equals("1>")) {
-                    outFile = parts.get(i + 1);
-                    parts = new ArrayList<>(parts.subList(0, i));
-                    break;
-                }
-
-                if (t.equals("2>")) {
-                    errFile = parts.get(i + 1);
-                    parts = new ArrayList<>(parts.subList(0, i));
-                    break;
-                }
+            if (t.equals(">") || t.equals("1>")) {
+                outFile = parts.get(i + 1);
+                appendOut = false;
+                parts = new ArrayList<>(parts.subList(0, i));
+                break;
             }
+
+            if (t.equals(">>") || t.equals("1>>")) {
+                outFile = parts.get(i + 1);
+                appendOut = true;
+                parts = new ArrayList<>(parts.subList(0, i));
+                break;
+            }
+
+            if (t.equals("2>")) {
+                errFile = parts.get(i + 1);
+                parts = new ArrayList<>(parts.subList(0, i));
+                break;
+            }
+        }
 
             if (parts.isEmpty()) {
                 continue;
@@ -119,7 +128,7 @@ public class Main {
                 }
 
                 if (outFile != null) {
-                    try (PrintWriter pw = new PrintWriter(outFile)) {
+                    try (PrintWriter pw = new PrintWriter(new FileWriter(outFile, appendOut))) {
                         pw.println(out);
                     }
                 } else {
@@ -133,7 +142,7 @@ public class Main {
 
             else if (cmd.equals("pwd")) {
                 if (outFile != null) {
-                    try (PrintWriter pw = new PrintWriter(outFile)) {
+                    try (PrintWriter pw = new PrintWriter(new FileWriter(outFile, appendOut))) {
                         pw.println(cur);
                     }
                 } else {
@@ -203,7 +212,7 @@ public class Main {
                 }
 
                 if (outFile != null) {
-                    try (PrintWriter pw = new PrintWriter(outFile)) {
+                    try (PrintWriter pw = new PrintWriter(new FileWriter(outFile, appendOut))) {
                         pw.println(ans);
                     }
                 } else {
@@ -231,9 +240,13 @@ public class Main {
                     ProcessBuilder pb = new ProcessBuilder(parts)
                             .directory(new File(cur));
 
-                    if (outFile != null) {
-                        pb.redirectOutput(new File(outFile));
-                    }
+                        if (outFile != null) {
+                            if (appendOut) {
+                                pb.redirectOutput(ProcessBuilder.Redirect.appendTo(new File(outFile)));
+                            } else {
+                                pb.redirectOutput(new File(outFile));
+                            }
+                        }
 
                     if (errFile != null) {
                         pb.redirectError(new File(errFile));
