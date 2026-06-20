@@ -279,8 +279,7 @@ public class Main {
 
                 if (bg) {
                     System.out.println("[1] " + pr.pid());
-                }
-                else {
+                } else {
                     if (outFile == null) {
                         pr.getInputStream().transferTo(System.out);
                     }
@@ -290,13 +289,12 @@ public class Main {
                     }
 
                     pr.waitFor();
-                
+                }
                 } else {
                     System.out.println(cmd + ": command not found");
                 }
+        }
+            }
+                sc.close();
             }
         }
-
-        sc.close();
-    }
-}
