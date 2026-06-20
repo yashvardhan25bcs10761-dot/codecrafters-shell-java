@@ -174,73 +174,43 @@ public class Main {
             String in = sc.nextLine();
 
             if (in.contains("|")) {
-                String[] cmds = in.split("\\|", 2);
 
-                List<String> left = parse(cmds[0].trim());
-                List<String> right = parse(cmds[1].trim());
+                String[] cmds = in.split("\\|");
 
-                String leftBuiltin = runBuiltin(left, b, paths);
-                String rightBuiltin = runBuiltin(right, b, paths);
+                List<ProcessBuilder> builders = new ArrayList<>();
 
-                if (leftBuiltin != null && rightBuiltin != null) {
-                    System.out.print(rightBuiltin);
-                    continue;
-                }
+                boolean hasBuiltin = false;
 
-                if (leftBuiltin != null) {
+                for (String cmdPart : cmds) {
+                    List<String> cmdParts = parse(cmdPart.trim());
 
-                    Process p = new ProcessBuilder(right)
-                            .directory(new File(cur))
-                            .start();
-
-                    try (OutputStream os = p.getOutputStream()) {
-                        os.write(leftBuiltin.getBytes());
+                    if (runBuiltin(cmdParts, b, paths) != null) {
+                        hasBuiltin = true;
+                        break;
                     }
 
-                    p.getInputStream().transferTo(System.out);
-                    p.getErrorStream().transferTo(System.err);
-
-                    p.waitFor();
-                    continue;
+                    builders.add(
+                            new ProcessBuilder(cmdParts)
+                                    .directory(new File(cur))
+                    );
                 }
 
-                if (rightBuiltin != null) {
+                if (!hasBuiltin) {
 
-                    Process p = new ProcessBuilder(left)
-                            .directory(new File(cur))
-                            .start();
+                    List<Process> pipeline = ProcessBuilder.startPipeline(builders);
 
-                    Thread t = new Thread(() -> {
-                        try {
-                            p.getInputStream().transferTo(OutputStream.nullOutputStream());
-                        } catch (IOException ignored) {
-                        }
-                    });
+                    Process last = pipeline.get(pipeline.size() - 1);
 
-                    t.start();
+                    last.getInputStream().transferTo(System.out);
+                    last.getErrorStream().transferTo(System.err);
 
-                    p.waitFor();
-
-                    System.out.print(rightBuiltin);
+                    for (Process p : pipeline) {
+                        p.waitFor();
+                    }
 
                     continue;
                 }
 
-                List<ProcessBuilder> builders = List.of(
-                        new ProcessBuilder(left).directory(new File(cur)),
-                        new ProcessBuilder(right).directory(new File(cur))
-                );
-
-                List<Process> pipeline = ProcessBuilder.startPipeline(builders);
-
-                Process last = pipeline.get(1);
-
-                last.getInputStream().transferTo(System.out);
-                last.getErrorStream().transferTo(System.err);
-
-                last.waitFor();
-
-                continue;
             }
 
             List<String> parts = parse(in);
