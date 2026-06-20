@@ -216,16 +216,26 @@ public class Main {
 
             else if (cmd.equals("jobs")) {
 
+                int maxId = -1;
+                int secondMaxId = -1;
+
+                for (Job j : jobs) {
+                    if (j.id > maxId) {
+                        secondMaxId = maxId;
+                        maxId = j.id;
+                    } else if (j.id > secondMaxId) {
+                        secondMaxId = j.id;
+                    }
+                }
+
                 List<Job> doneJobs = new ArrayList<>();
 
-                for (int i = 0; i < jobs.size(); i++) {
-                    Job j = jobs.get(i);
-
+                for (Job j : jobs) {
                     char mark = ' ';
 
-                    if (i == jobs.size() - 1) {
+                    if (j.id == maxId) {
                         mark = '+';
-                    } else if (i == jobs.size() - 2) {
+                    } else if (j.id == secondMaxId) {
                         mark = '-';
                     }
 
