@@ -121,6 +121,39 @@ public class Main {
         return res;
     }
 
+    static String runBuiltin(List<String> parts, List<String> builtins, String[] paths) {
+        String cmd = parts.get(0);
+
+        if (cmd.equals("echo")) {
+            if (parts.size() > 1) {
+                return String.join(" ", parts.subList(1, parts.size())) + "\n";
+            }
+            return "\n";
+        }
+
+        if (cmd.equals("type")) {
+            if (parts.size() < 2) return "";
+
+            String t = parts.get(1);
+
+            if (builtins.contains(t)) {
+                return t + " is a shell builtin\n";
+            }
+
+            for (String p : paths) {
+                File f = new File(p, t);
+
+                if (f.exists() && f.canExecute()) {
+                    return t + " is " + f.getAbsolutePath() + "\n";
+                }
+            }
+
+            return t + ": not found\n";
+        }
+
+        return null;
+    }
+
     public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
 
@@ -146,6 +179,48 @@ public class Main {
                 List<String> left = parse(cmds[0].trim());
                 List<String> right = parse(cmds[1].trim());
 
+                String leftBuiltin = runBuiltin(left, b, paths);
+                String rightBuiltin = runBuiltin(right, b, paths);
+
+                if (leftBuiltin != null) {
+
+                    Process p = new ProcessBuilder(right)
+                            .directory(new File(cur))
+                            .start();
+
+                    try (OutputStream os = p.getOutputStream()) {
+                        os.write(leftBuiltin.getBytes());
+                    }
+
+                    p.getInputStream().transferTo(System.out);
+                    p.getErrorStream().transferTo(System.err);
+
+                    p.waitFor();
+                    continue;
+                }
+
+                if (rightBuiltin != null) {
+
+                    Process p = new ProcessBuilder(left)
+                            .directory(new File(cur))
+                            .start();
+
+                    Thread t = new Thread(() -> {
+                        try {
+                            p.getInputStream().transferTo(OutputStream.nullOutputStream());
+                        } catch (IOException ignored) {
+                        }
+                    });
+
+                    t.start();
+
+                    p.waitFor();
+
+                    System.out.print(rightBuiltin);
+
+                    continue;
+                }
+
                 List<ProcessBuilder> builders = List.of(
                         new ProcessBuilder(left).directory(new File(cur)),
                         new ProcessBuilder(right).directory(new File(cur))
@@ -153,19 +228,13 @@ public class Main {
 
                 List<Process> pipeline = ProcessBuilder.startPipeline(builders);
 
-                Process last = pipeline.get(pipeline.size() - 1);
+                Process last = pipeline.get(1);
 
                 last.getInputStream().transferTo(System.out);
                 last.getErrorStream().transferTo(System.err);
 
                 last.waitFor();
 
-                continue;
-            }
-
-            List<String> parts = parse(in);
-
-            if (parts.isEmpty()) {
                 continue;
             }
 
