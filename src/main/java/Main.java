@@ -216,12 +216,10 @@ public class Main {
 
             else if (cmd.equals("jobs")) {
 
+                List<Job> doneJobs = new ArrayList<>();
+
                 for (int i = 0; i < jobs.size(); i++) {
                     Job j = jobs.get(i);
-
-                    if (!j.p.isAlive()) {
-                        continue;
-                    }
 
                     char mark = ' ';
 
@@ -231,12 +229,24 @@ public class Main {
                         mark = '-';
                     }
 
-                    System.out.printf("[%d]%c  %-24s %s &%n",
-                            j.id,
-                            mark,
-                            "Running",
-                            j.cmd);
+                    if (j.p.isAlive()) {
+                        System.out.printf("[%d]%c  %-24s %s &%n",
+                                j.id,
+                                mark,
+                                "Running",
+                                j.cmd);
+                    } else {
+                        System.out.printf("[%d]%c  %-24s %s%n",
+                                j.id,
+                                mark,
+                                "Done",
+                                j.cmd);
+
+                        doneJobs.add(j);
+                    }
                 }
+
+                jobs.removeAll(doneJobs);
             }
 
             else if (cmd.equals("type")) {
