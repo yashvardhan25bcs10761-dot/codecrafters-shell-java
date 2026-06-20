@@ -125,6 +125,10 @@ public class Main {
                 } else {
                     System.out.println(out);
                 }
+
+                if (errFile != null) {
+                    new PrintWriter(errFile).close();
+                }
             }
 
             else if (cmd.equals("pwd")) {
@@ -134,6 +138,10 @@ public class Main {
                     }
                 } else {
                     System.out.println(cur);
+                }
+
+                if (errFile != null) {
+                    new PrintWriter(errFile).close();
                 }
             }
 
@@ -200,6 +208,10 @@ public class Main {
                     }
                 } else {
                     System.out.println(ans);
+                }
+
+                if (errFile != null) {
+                    new PrintWriter(errFile).close();
                 }
             }
 
