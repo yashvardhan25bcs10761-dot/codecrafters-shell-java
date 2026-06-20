@@ -275,21 +275,30 @@ public class Main {
                         }
                     }
 
-                Process pr = pb.start();
+                    if (bg) {
+                        if (outFile == null) {
+                            pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+                        }
 
-                if (bg) {
-                    System.out.println("[1] " + pr.pid());
-                } else {
-                    if (outFile == null) {
-                        pr.getInputStream().transferTo(System.out);
+                        if (errFile == null) {
+                            pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+                        }
+
+                        Process pr = pb.start();
+                        System.out.println("[1] " + pr.pid());
+                    } else {
+                        Process pr = pb.start();
+
+                        if (outFile == null) {
+                            pr.getInputStream().transferTo(System.out);
+                        }
+
+                        if (errFile == null) {
+                            pr.getErrorStream().transferTo(System.err);
+                        }
+
+                        pr.waitFor();
                     }
-
-                    if (errFile == null) {
-                        pr.getErrorStream().transferTo(System.err);
-                    }
-
-                    pr.waitFor();
-                }
                 } else {
                     System.out.println(cmd + ": command not found");
                 }
