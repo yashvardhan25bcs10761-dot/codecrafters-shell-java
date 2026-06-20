@@ -152,7 +152,7 @@ public class Main {
                 }
 
                 if (errFile != null) {
-                    new PrintWriter(errFile).close();
+                    new PrintWriter(new FileWriter(errFile, appendErr)).close();
                 }
             }
 
@@ -239,7 +239,7 @@ public class Main {
                 }
 
                 if (errFile != null) {
-                    new PrintWriter(errFile).close();
+                    new PrintWriter(new FileWriter(errFile, appendErr)).close();
                 }
             }
 
